@@ -1,0 +1,358 @@
+*&---------------------------------------------------------------------*
+*& Report Z_ALV_PRACTICE_EKKO_EKPO_SS
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT z_alv_practice_ekko_ekpo_ss.
+
+TABLES: ekko, ekpo.
+
+* Selection screen
+SELECT-OPTIONS: s_ebeln FOR ekko-ebeln,
+                s_bukrs FOR ekko-bukrs,
+                s_bstyp FOR ekko-bstyp,
+                s_bsart FOR ekko-bsart.
+
+* Define structure for EKKO data
+TYPES: BEGIN OF ty_ekko,
+         ebeln TYPE ekko-ebeln,
+         bukrs TYPE ekko-bukrs,
+         bstyp TYPE ekko-bstyp,
+         bsart TYPE ekko-bsart,
+         statu TYPE ekko-statu,
+       END OF ty_ekko.
+
+* Define structure for EKPO data
+TYPES: BEGIN OF ty_ekpo,
+         ebeln TYPE ekpo-ebeln,
+         ebelp TYPE ekpo-ebelp,
+         matnr TYPE ekpo-matnr,
+         menge TYPE ekpo-menge,
+         meins TYPE ekpo-meins,
+       END OF ty_ekpo.
+
+* Define structure for combined data
+TYPES: BEGIN OF ty_merged,
+         ebeln TYPE ekko-ebeln,
+         bukrs TYPE ekko-bukrs,
+         bstyp TYPE ekko-bstyp,
+         bsart TYPE ekko-bsart,
+         statu TYPE ekko-statu,
+         ebelp TYPE ekpo-ebelp,
+         matnr TYPE ekpo-matnr,
+         menge TYPE ekpo-menge,
+         meins TYPE ekpo-meins,
+       END OF ty_merged.
+
+* Declare tables to hold EKKO, EKPO and merged data
+DATA: lt_ekko   TYPE TABLE OF ty_ekko,
+      lt_ekpo   TYPE TABLE OF ty_ekpo,
+      lt_merged TYPE TABLE OF ty_merged.
+
+* ALV object reference
+DATA: lo_alv TYPE REF TO cl_salv_table.
+
+* Local class definition for report
+CLASS lcl_report DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      get_data,
+      merge_data,
+      generate_output.
+ENDCLASS.
+
+* Local class implementation
+CLASS lcl_report IMPLEMENTATION.
+  METHOD get_data.
+    " Fetch data from EKKO table
+    SELECT ebeln, bukrs, bstyp, bsart, statu
+      FROM ekko
+      INTO TABLE @lt_ekko
+      WHERE ebeln IN @s_ebeln
+        AND bukrs IN @s_bukrs
+        AND bstyp IN @s_bstyp
+        AND bsart IN @s_bsart.
+
+    " Fetch data from EKPO table
+    SELECT ebeln, ebelp, matnr, menge, meins
+      FROM ekpo
+      INTO TABLE @lt_ekpo
+      FOR ALL ENTRIES IN @lt_ekko
+      WHERE ebeln = @lt_ekko-ebeln.
+  ENDMETHOD.
+
+  METHOD merge_data.
+    LOOP AT lt_ekko INTO DATA(ls_ekko).
+      LOOP AT lt_ekpo INTO DATA(ls_ekpo) WHERE ebeln = ls_ekko-ebeln.
+        APPEND VALUE #( ebeln = ls_ekko-ebeln
+                        bukrs = ls_ekko-bukrs
+                        bstyp = ls_ekko-bstyp
+                        bsart = ls_ekko-bsart
+                        statu = ls_ekko-statu
+                        ebelp = ls_ekpo-ebelp
+                        matnr = ls_ekpo-matnr
+                        menge = ls_ekpo-menge
+                        meins = ls_ekpo-meins ) TO lt_merged.
+      ENDLOOP.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD generate_output.
+    TRY.
+        cl_salv_table=>factory(
+          IMPORTING
+            r_salv_table = lo_alv
+          CHANGING
+            t_table      = lt_merged
+        ).
+      CATCH cx_salv_msg INTO DATA(lx_salv_msg).
+        MESSAGE e001(00) WITH 'Error displaying ALV'.
+    ENDTRY.
+
+    " Customize column headers
+    DATA(lo_columns) = lo_alv->get_columns( ).
+
+    DATA(lo_column) = lo_columns->get_column( 'EBELN' ).
+    lo_column->set_short_text( |Purchasing Document Number| ).
+
+    lo_column = lo_columns->get_column( 'BUKRS' ).
+    lo_column->set_short_text( |Company Code| ).
+
+    lo_column = lo_columns->get_column( 'BSTYP' ).
+    lo_column->set_short_text( |Purchasing Document Category| ).
+
+    lo_column = lo_columns->get_column( 'BSART' ).
+    lo_column->set_short_text( |Purchasing Document Type| ).
+
+    lo_column = lo_columns->get_column( 'STATU' ).
+    lo_column->set_short_text( |Status of Purchasing Document| ).
+
+    lo_column = lo_columns->get_column( 'EBELP' ).
+    lo_column->set_short_text( |Item Number| ).
+
+    lo_column = lo_columns->get_column( 'MATNR' ).
+    lo_column->set_short_text( |Material Number| ).
+
+    lo_column = lo_columns->get_column( 'MENGE' ).
+    lo_column->set_short_text( |Quantity| ).
+
+    lo_column = lo_columns->get_column( 'MEINS' ).
+    lo_column->set_short_text( |Unit of Measure| ).
+
+    " Display ALV
+    lo_alv->display( ).
+  ENDMETHOD.
+ENDCLASS.
+
+* Start of Selection event
+START-OF-SELECTION.
+  DATA(lo_report) = NEW lcl_report( ).
+
+  lo_report->get_data( ).
+  lo_report->merge_data( ).
+  lo_report->generate_output( ).
+
+
+
+
+
+
+  " PARAMETERS METHOD
+
+**&---------------------------------------------------------------------*
+**& Report Z_ALV_PRACTICE_EKKO_EKPO_SS
+**&---------------------------------------------------------------------*
+**&
+**&---------------------------------------------------------------------*
+*REPORT z_alv_practice_ekko_ekpo_ss.
+*
+* " PARAMETERS method
+*
+*data lv_ebeln TYPE ekko-ebeln.
+** Selection screen
+*PARAMETERS: p_ebeln TYPE ekko-ebeln,
+*            p_bukrs TYPE ekko-bukrs,
+*            p_bstyp TYPE ekko-bstyp,
+*            p_bsart TYPE ekko-bsart.
+*
+*SELECT-OPTIONS s_ebeln FOR lv_ebeln no INTERVALS.
+*
+**EBELN - Purchasing Document Number
+**BUKRS - Company Code
+**BSTYP - Purchasing Document Category
+**BSART - Purchasing Document Type
+**STATU - Status of Purchasing Document
+**EBELP - Item Number of Purchasing Document
+**MATNR - Material Number
+**MENGE - Quantity
+**MEINS - Unit of Measure
+*
+** Define structure for EKKO data
+*TYPES: BEGIN OF ty_ekko,
+*         ebeln TYPE ekko-ebeln,
+*         bukrs TYPE ekko-bukrs,
+*         bstyp TYPE ekko-bstyp,
+*         bsart TYPE ekko-bsart,
+*         statu TYPE ekko-statu,
+*       END OF ty_ekko.
+*
+** Define structure for EKPO data
+*TYPES: BEGIN OF ty_ekpo,
+*         ebeln TYPE ekpo-ebeln,
+*         ebelp TYPE ekpo-ebelp,
+*         matnr TYPE ekpo-matnr,
+*         menge TYPE ekpo-menge,
+*         meins TYPE ekpo-meins,
+*       END OF ty_ekpo.
+*
+** Define structure for combined data
+*TYPES: BEGIN OF ty_merged,
+*         ebeln TYPE ekko-ebeln,
+*         bukrs TYPE ekko-bukrs,
+*         bstyp TYPE ekko-bstyp,
+*         bsart TYPE ekko-bsart,
+*         statu TYPE ekko-statu,
+*         ebelp TYPE ekpo-ebelp,
+*         matnr TYPE ekpo-matnr,
+*         menge TYPE ekpo-menge,
+*         meins TYPE ekpo-meins,
+*       END OF ty_merged.
+*
+** Declare tables to hold EKKO, EKPO and merged data
+*DATA: lt_ekko   TYPE TABLE OF ty_ekko,
+*      lt_ekpo   TYPE TABLE OF ty_ekpo,
+*      lt_merged TYPE TABLE OF ty_merged.
+*
+** ALV object reference
+*DATA: lo_alv TYPE REF TO cl_salv_table.
+*
+** Local class definition for report
+*CLASS lcl_report DEFINITION.
+*  PUBLIC SECTION.
+*    METHODS:
+*      get_data,
+*      merge_data,
+*      generate_output.
+*ENDCLASS.
+*
+** Local class implementation
+*CLASS lcl_report IMPLEMENTATION.
+*  METHOD get_data.
+*    " Fetch data from EKKO table
+*    IF p_ebeln IS NOT INITIAL.
+*      SELECT ebeln bukrs bstyp bsart statu
+*             INTO TABLE lt_ekko
+*             FROM ekko
+*             WHERE ebeln = p_ebeln.
+*    ELSEIF p_bukrs IS NOT INITIAL.
+*      SELECT ebeln bukrs bstyp bsart statu
+*             INTO TABLE lt_ekko
+*             FROM ekko
+*             WHERE bukrs = p_bukrs.
+*    ELSEIF p_bstyp IS NOT INITIAL.
+*      SELECT ebeln bukrs bstyp bsart statu
+*             INTO TABLE lt_ekko
+*             FROM ekko
+*             WHERE bstyp = p_bstyp.
+*    ELSEIF p_bsart IS NOT INITIAL.
+*      SELECT ebeln bukrs bstyp bsart statu
+*             INTO TABLE lt_ekko
+*             FROM ekko
+*             WHERE bsart = p_bsart.
+*    ELSE.
+*      SELECT ebeln bukrs bstyp bsart statu
+*             INTO TABLE lt_ekko
+*             FROM ekko
+*             UP TO 20 ROWS.
+*    ENDIF.
+*
+*    " Fetch data from EKPO table
+*    SELECT ebeln ebelp matnr menge meins
+*           INTO TABLE lt_ekpo
+*           FROM ekpo
+*           FOR ALL ENTRIES IN lt_ekko
+*           WHERE ebeln = lt_ekko-ebeln.
+*  ENDMETHOD.
+*
+*  METHOD merge_data.
+*    DATA: ls_ekko   TYPE ty_ekko,
+*          ls_ekpo   TYPE ty_ekpo,
+*          ls_merged TYPE ty_merged.
+*
+*    LOOP AT lt_ekko INTO ls_ekko.
+*      LOOP AT lt_ekpo INTO ls_ekpo WHERE ebeln = ls_ekko-ebeln.
+*        ls_merged-ebeln = ls_ekko-ebeln.
+*        ls_merged-bukrs = ls_ekko-bukrs.
+*        ls_merged-bstyp = ls_ekko-bstyp.
+*        ls_merged-bsart = ls_ekko-bsart.
+*        ls_merged-statu = ls_ekko-statu.
+*        ls_merged-ebelp = ls_ekpo-ebelp.
+*        ls_merged-matnr = ls_ekpo-matnr.
+*        ls_merged-menge = ls_ekpo-menge.
+*        ls_merged-meins = ls_ekpo-meins.
+*        APPEND ls_merged TO lt_merged.
+*      ENDLOOP.
+*    ENDLOOP.
+*  ENDMETHOD.
+*
+*  METHOD generate_output.
+*    " Create ALV instance
+*    DATA: lx_salv_msg TYPE REF TO cx_salv_msg.
+*
+*    TRY.
+*        cl_salv_table=>factory(
+*          IMPORTING
+*            r_salv_table = lo_alv
+*          CHANGING
+*            t_table      = lt_merged
+*        ).
+*      CATCH cx_salv_msg INTO lx_salv_msg.
+*        MESSAGE e001(00) WITH 'Error displaying ALV'.
+*    ENDTRY.
+*
+*    " Customize column headers
+*    DATA: lo_columns TYPE REF TO cl_salv_columns_table,
+*          lo_column  TYPE REF TO cl_salv_column.
+*
+*    lo_columns = lo_alv->get_columns( ).
+*
+*    lo_column = lo_columns->get_column( 'EBELN' ).
+*    lo_column->set_short_text( |Purchasing Document Number| ).
+*
+*    lo_column = lo_columns->get_column( 'BUKRS' ).
+*    lo_column->set_short_text( |Company Code| ).
+*
+*    lo_column = lo_columns->get_column( 'BSTYP' ).
+*    lo_column->set_short_text( |Purchasing Document Category| ).
+*
+*    lo_column = lo_columns->get_column( 'BSART' ).
+*    lo_column->set_short_text( |Purchasing Document Type| ).
+*
+*    lo_column = lo_columns->get_column( 'STATU' ).
+*    lo_column->set_short_text( |Status of Purchasing Document| ).
+*
+*    lo_column = lo_columns->get_column( 'EBELP' ).
+*    lo_column->set_short_text( |Item Number| ).
+*
+*    lo_column = lo_columns->get_column( 'MATNR' ).
+*    lo_column->set_short_text( |Material Number| ).
+*
+*    lo_column = lo_columns->get_column( 'MENGE' ).
+*    lo_column->set_short_text( |Quantity| ).
+*
+*    lo_column = lo_columns->get_column( 'MEINS' ).
+*    lo_column->set_short_text( |Unit of Measure| ).
+*
+*    " Display ALV
+*    lo_alv->display( ).
+*  ENDMETHOD.
+*ENDCLASS.
+*
+** Start of Selection event
+*START-OF-SELECTION.
+*  DATA: lo_report TYPE REF TO lcl_report.
+*
+*  CREATE OBJECT lo_report.
+*  lo_report->get_data( ).
+*  lo_report->merge_data( ).
+*  lo_report->generate_output( ).
