@@ -1,0 +1,61 @@
+@AbapCatalog.sqlViewName: 'ZV_EKKO_EKPO'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Purchasing Document Overview'
+@OData.publish: true
+define view Z_CDS_EKKO_EKPO as select from ekko
+  inner join ekpo on ekko.ebeln = ekpo.ebeln
+{
+  @UI.selectionField: [
+    { position: 10, label: 'Purchasing Document Number', width: '15em', importance: #HIGH }
+  ]
+  @EndUserText.label: 'Purchasing Document Number'
+  key ekko.ebeln,    // Purchasing Document Number
+
+  @UI.selectionField: [
+    { position: 20, label: 'Company Code', width: '10em', importance: #MEDIUM }
+  ]
+  @EndUserText.label: 'Company Code'
+  ekko.bukrs,        // Company Code
+
+  @UI.selectionField: [
+    { position: 30, label: 'Document Category', width: '8em', defaultValue: 'F', hidden: true }
+  ]
+  @EndUserText.label: 'Purchasing Document Category'
+  ekko.bstyp,        // Purchasing Document Category
+
+  @UI.selectionField: [
+    { position: 40, label: 'Document Type', width: '12em', importance: #LOW }
+  ]
+  @EndUserText.label: 'Purchasing Document Type'
+  ekko.bsart,        // Purchasing Document Type
+
+  @UI.selectionField: [
+    { position: 50, label: 'Status', width: '8em', importance: #MEDIUM }
+  ]
+  @EndUserText.label: 'Status of Purchasing Document'
+  ekko.statu,        // Status of Purchasing Document
+
+  @UI.lineItem: [
+    { position: 10, label: 'Item Number', width: '5em', importance: #HIGH, type: #FOR_ACTION }
+  ]
+  @EndUserText.label: 'Item Number'
+  ekpo.ebelp,        // Item Number
+
+  @UI.lineItem: [
+    { position: 20, label: 'Material Number', width: '10em', importance: #MEDIUM }
+  ]
+  @EndUserText.label: 'Material Number'
+  ekpo.matnr,        // Material Number
+
+  @UI.lineItem: [
+    { position: 30, label: 'Quantity', width: '8em', importance: #HIGH, criticality: #POSITIVE }
+  ]
+  @EndUserText.label: 'Quantity'
+  ekpo.menge,        // Quantity
+
+  @UI.lineItem: [
+    { position: 40, label: 'Unit of Measure', width: '6em', hidden: true }
+  ]
+  @EndUserText.label: 'Unit of Measure'
+  ekpo.meins         // Unit of Measure
+}
