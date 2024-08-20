@@ -1,0 +1,94 @@
+*&---------------------------------------------------------------------*
+*& Report Z_ALV_PRACTICE_EKKO
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT z_alv_practice_ekko.
+
+*EBELN - Purchasing Document Number
+*BUKRS - Company Code
+*BSTYP - Purchasing Document Category
+*BSART - Purchasing Document Type
+*STATU - Status of Purchasing Document
+
+* Define structure for EKKO data
+TYPES: BEGIN OF ty_ekko,
+         ebeln TYPE ekko-ebeln,
+         bukrs TYPE ekko-bukrs,
+         bstyp TYPE ekko-bstyp,
+         bsart TYPE ekko-bsart,
+         statu TYPE ekko-statu,
+       END OF ty_ekko.
+
+* Declare table to hold EKKO data
+DATA: lt_ekko TYPE TABLE OF ty_ekko.
+
+* ALV object reference
+DATA: lo_alv_ekko TYPE REF TO cl_salv_table.
+
+* Local class definition for report
+CLASS lcl_report DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      get_data,
+      generate_output.
+ENDCLASS.
+
+* Local class implementation
+CLASS lcl_report IMPLEMENTATION.
+  METHOD get_data.
+    " Fetch data from EKKO table
+    SELECT ebeln bukrs bstyp bsart statu
+           INTO TABLE lt_ekko
+           FROM ekko
+           UP TO 20 ROWS.
+  ENDMETHOD.
+
+  METHOD generate_output.
+    " Create ALV instance
+    DATA: lx_salv_msg TYPE REF TO cx_salv_msg.
+
+    TRY.
+        cl_salv_table=>factory(
+          IMPORTING
+            r_salv_table = lo_alv_ekko
+          CHANGING
+            t_table      = lt_ekko
+        ).
+      CATCH cx_salv_msg INTO lx_salv_msg.
+        MESSAGE e001(00) WITH 'Error displaying ALV'.
+    ENDTRY.
+
+    " Customize column headers
+    DATA: lo_columns TYPE REF TO cl_salv_columns_table,
+          lo_column  TYPE REF TO cl_salv_column.
+
+    lo_columns = lo_alv_ekko->get_columns( ).
+
+    lo_column = lo_columns->get_column( 'EBELN' ).
+    lo_column->set_short_text( |Purchasing Document Number| ).
+
+    lo_column = lo_columns->get_column( 'BUKRS' ).
+    lo_column->set_short_text( |Company Code| ).
+
+    lo_column = lo_columns->get_column( 'BSTYP' ).
+    lo_column->set_short_text( |Purchasing Document Category| ).
+
+    lo_column = lo_columns->get_column( 'BSART' ).
+    lo_column->set_short_text( |Purchasing Document Type| ).
+
+    lo_column = lo_columns->get_column( 'STATU' ).
+    lo_column->set_short_text( |Status of Purchasing Document| ).
+
+    " Display ALV
+    lo_alv_ekko->display( ).
+  ENDMETHOD.
+ENDCLASS.
+
+* Start of Selection event
+START-OF-SELECTION.
+  DATA: lo_report TYPE REF TO lcl_report.
+
+  CREATE OBJECT lo_report.
+  lo_report->get_data( ).
+  lo_report->generate_output( ).
