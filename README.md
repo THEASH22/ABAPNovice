@@ -9,6 +9,11 @@ I hope you find it helpful if you are venturing into SAP ABAP programming, espec
 <br>
 <br>
 <br>
+Tools used: SAP S/4HANA, Notepad++, Eclipse IDE for Java Developers, Visual Studio Code. <br>
+[Requires setting up for Eclipse and VS Code, e.g. Fiori Extensions for VS Code, Connecting to SAP On-Premise Sysrtem/SAP BTP to Eclipse]
+<br>
+<br>
+<br>
 _Contents:_
 <br>
 <br>
