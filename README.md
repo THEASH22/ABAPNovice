@@ -6,3 +6,23 @@ I'm a novice in SAP (_currently at the time of writing_) and started learning AB
 <br>
 <br>
 I hope you find it helpful if you are venturing into SAP ABAP programming, especially those new to the language.
+<br>
+<br>
+<br>
+_Contents:_
+<br>
+<br>
+Task 1: Basic ALV Report (Z_ALV_PRACTICE_EKKO) <br>
+Description: Create a basic ABAP report to extract data from the EKKO table and display it in an ALV grid.
+<br>
+<br>
+Task 2: Joining Tables and ALV (Z_ALV_PRACTICE_EKKO_EKPO) <br>
+Description: Enhance the previous report to include data from both EKKO and EKPO tables. Join the tables based on relevant fields and display the combined data in an ALV grid.
+<br>
+<br>
+Task 3: ALV Report with Selection Screen (Z_ALV_PRACTICE_EKKO_EKPO_SS) <br>
+Description: Implement a selection screen on the report to allow users to filter the displayed data based on specific criteria. Use the selected parameters to refine the data extraction from EKKO and EKPO tables.
+<br>
+<br>
+Task 4: CDS View and OData Service (Z_CDS_EKKO_EKPO) <br>
+Description: Create a Core Data Services (CDS) view to encapsulate the logic for joining EKKO and EKPO tables. Expose this CDS view as an OData service to enable data consumption through Fiori applications.
